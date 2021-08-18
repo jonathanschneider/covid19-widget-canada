@@ -1,0 +1,37 @@
+{
+  "province": "All",
+  "last_updated": "2021-08-17 20:25:02",
+  "data": [{
+    "date": "2021-08-10",
+    "change_cases": 1343,
+    "total_cases": 1443421
+  }, {
+    "date": "2021-08-11",
+    "change_cases": 1868,
+    "total_cases": 1445289
+  }, {
+    "date": "2021-08-12",
+    "change_cases": 2139,
+    "total_cases": 1447428
+  }, {
+    "date": "2021-08-13",
+    "change_cases": 2405,
+    "total_cases": 1449833
+  }, {
+    "date": "2021-08-14",
+    "change_cases": 2235,
+    "total_cases": 1452068
+  }, {
+    "date": "2021-08-15",
+    "change_cases": 1867,
+    "total_cases": 1453935
+  }, {
+    "date": "2021-08-16",
+    "change_cases": 2001,
+    "total_cases": 1455936
+  }, {
+    "date": "2021-08-17",
+    "change_cases": 1816,
+    "total_cases": 1457752
+  }]
+}

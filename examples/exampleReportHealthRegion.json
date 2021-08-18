@@ -1,0 +1,37 @@
+{
+  "hr_uid": 4601,
+  "last_updated": "2021-08-17 15:09:02",
+  "data": [{
+    "date": "2021-08-10",
+    "change_cases": 15,
+    "total_cases": 33937
+  }, {
+    "date": "2021-08-11",
+    "change_cases": 14,
+    "total_cases": 33951
+  }, {
+    "date": "2021-08-12",
+    "change_cases": 14,
+    "total_cases": 33965
+  }, {
+    "date": "2021-08-13",
+    "change_cases": 11,
+    "total_cases": 33976
+  }, {
+    "date": "2021-08-14",
+    "change_cases": null,
+    "total_cases": 33976
+  }, {
+    "date": "2021-08-15",
+    "change_cases": null,
+    "total_cases": 33976
+  }, {
+    "date": "2021-08-16",
+    "change_cases": 41,
+    "total_cases": 34017
+  }, {
+    "date": "2021-08-17",
+    "change_cases": null,
+    "total_cases": 34017
+  }]
+}
