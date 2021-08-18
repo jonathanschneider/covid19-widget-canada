@@ -136,9 +136,11 @@ if (config.runsInWidget) { // Widget
   table.present();
 
 } else if (config.runsWithSiri) { // Siri
-  // if (config.runsWithSiri) {
-  //   Speech.speak(`There are ${provinceData.total_cases} cases in ${province}, and ${provinceData.change_cases} cases as of ${timestamp} today.`);
-  // }
+  if (hrCode !== undefined) {
+    Speech.speak(`There are ${resHealthRegion.data[6].change_cases} new cases in your health region ${hrName} and ${resProvince.data[6].change_cases} new cases in ${provinces[province]} today.`);
+  } else {
+    Speech.speak(`There are ${resProvince.data[6].change_cases} new cases in ${provinces[province]} today.`);
+  }
 }
 
 function createRow(title, number) {
