@@ -49,7 +49,7 @@ class Cases {
       sum += timeseries[i].change_cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1] > avg ? "↗" : "↘︎";
+    return timeseries[timeseries.length - 1] > avg ? {"symbol": "↗", "colour": Color.red()} : {"symbol": "↘︎", "colour": Color.green()};
   }
 }
 
@@ -191,9 +191,13 @@ function createBigStack(_parent, _data) {
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(_data.newCases) + " " + _data.trendIndicator);
+  let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
+  casesStack.addSpacer(defaultSpace);
+  let trend = casesStack.addText(_data.trendIndicator.symbol);
+  trend.textColor = _data.trendIndicator.colour;
+  trend.font = Font.systemFont(28);
   casesStack.addSpacer();
 
   return stack;
@@ -217,9 +221,13 @@ function createSmallStack(_parent, _data) {
   let casesStack = stack.addStack();
   // casesStack.centerAlignContent();
   casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(_data.newCases) + " " + _data.trendIndicator);
+  let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(14);
+  casesStack.addSpacer(defaultSpace);
+  let trend = casesStack.addText(_data.trendIndicator.symbol);
+  trend.textColor = _data.trendIndicator.colour;
+  trend.font = Font.systemFont(14);
   casesStack.addSpacer();
 
   return stack;
