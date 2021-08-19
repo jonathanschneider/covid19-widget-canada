@@ -17,6 +17,7 @@ const bgColour = Color.white();
 const stackColour = "#E6E6E6";
 const textColour = Color.black();
 const defaultSpace = 5;
+const defaultPadding = 5;
 
 const provinces = {
   "AB": "Alberta",
@@ -158,10 +159,10 @@ function createWidget() {
   let widget = new ListWidget();
   widget.spacing = defaultSpace;
   widget.backgroundColor = bgColour;
+  widget.setPadding(0, 0, 0, 0);
 
   // Health region stack
   let topStack = createBigStack(widget, casesHr);
-  // topStack.setPadding(defaultSpace, defaultSpace, 0, defaultSpace);
 
   // widget.addSpacer(defaultSpace);
 
@@ -171,7 +172,7 @@ function createWidget() {
   // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
 
   let provStack = createSmallStack(bottomStack, casesProvince);
-  bottomStack.addSpacer();
+  bottomStack.addSpacer(defaultSpace);
   let countryStack = createSmallStack(bottomStack, casesCountry);
 
   return widget;
@@ -180,7 +181,9 @@ function createWidget() {
 function createBigStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
+  // stack.setPadding(0, 0, 0, 0);
   stack.spacing = defaultSpace;
+  // stack.size = new Size(0, 100);
   stack.backgroundColor = new Color(stackColour);
   stack.cornerRadius = 5;
 
@@ -208,12 +211,11 @@ function createSmallStack(_parent, _data) {
   stack.layoutVertically();
   stack.spacing = defaultSpace;
   stack.backgroundColor = new Color(stackColour);
-  stack.size = new Size(60, 0);
+  // stack.size = new Size(100, 0);
   stack.cornerRadius = 5;
 
   let titleStack = stack.addStack();
-  // titleStack.layoutHorizontally();
-  titleStack.addSpacer();
+  // titleStack.addSpacer();
   let title = titleStack.addText(_data.area);
   title.textColor = textColour;
   title.font = Font.systemFont(10);
@@ -243,9 +245,9 @@ function createRow(title, number) {
 function fillData(table, data) {
   table.addRow(createRow("New cases", formatNumber(data.change_cases)));
   table.addRow(createRow("Total cases", formatNumber(data.total_cases)));
-  // table.addRow(createRow("Deaths", formatNumber(data.total_fatalities)));
-  // table.addRow(createRow("Recovered", formatNumber(data.total_recoveries)));
-  // table.addRow(createRow("Critical", formatNumber(data.total_criticals)));
+  table.addRow(createRow("Deaths", formatNumber(data.total_fatalities)));
+  table.addRow(createRow("Recovered", formatNumber(data.total_recoveries)));
+  table.addRow(createRow("Critical", formatNumber(data.total_criticals)));
 }
 
 function formatNumber(num) {
