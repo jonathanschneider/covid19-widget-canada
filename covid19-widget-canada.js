@@ -13,8 +13,10 @@
 let hrCode = "4601"; // Winnipeg
 let province = "MB";
 
-const backgroundColour = "#FFFFFF";
-const textColour = "#000000";
+const bgColour = Color.white();
+const stackColour = "#E6E6E6";
+const textColour = Color.black();
+const defaultSpace = 5;
 
 const provinces = {
   "AB": "Alberta",
@@ -35,6 +37,7 @@ const provinces = {
 let req = {};
 let hrName;
 let resHealthRegion;
+let widget;
 
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
@@ -74,73 +77,127 @@ req = new Request("https://api.covid19tracker.ca/reports?stat=cases&fill_dates=t
 const resCountry = await req.loadJSON();
 
 if (config.runsInWidget) { // Widget
-  let widget = new ListWidget();
-  widget.backgroundColor = new Color(backgroundColour);
-
-  let lines = [];
-
-  lines.push(widget.addText(hrName));
-  widget.addSpacer(5);
-
-  lines.push(widget.addText(provinces[province]));
-  widget.addSpacer(5);
-
-  lines.push(widget.addText("Country"));
-  widget.addSpacer(5);
-
-  // Style text
-  lines.forEach(line => {
-    line.textColor = new Color(textColour);
-    line.textOpacity = 0.8;
-    line.font = Font.systemFont(14);
-  });
-
+  let widget = createWidget();
   Script.setWidget(widget);
   Script.complete();
 
 } else if (config.runsInApp ) { // App
-  // make table
-  let table = new UITable();
-  let row = new UITableRow();
+  let widget = createWidget();
+  widget.presentSmall();
 
-  // Health region (if provided)
-  if (hrCode !== undefined) {
-    row = new UITableRow();
-    row.isHeader = true;
-    row.addText(hrName);
-    table.addRow(row);
-    fillData(table, resHealthRegion.data[6]);
-  }
-
-  // Province
-  row = new UITableRow();
-  row.isHeader = true;
-  row.addText(provinces[province]);
-  table.addRow(row);
-  fillData(table, resProvince.data[6]);
-
-  // Country-wide
-  row = new UITableRow();
-  row.isHeader = true;
-  row.addText("Country-wide");
-  table.addRow(row);
-  fillData(table, resCountry.data[6]);
-
-  // Last updated
-  row = new UITableRow();
-  row.addText(""); // Empty row
-  table.addRow(row);
-  table.addRow(createRow("Last Updated", resCountry.last_updated));
-
-  // present table
-  table.present();
+  // // make table
+  // let table = new UITable();
+  // let row = new UITableRow();
+  //
+  // // Health region (if provided)
+  // if (hrCode !== undefined) {
+  //   row = new UITableRow();
+  //   row.isHeader = true;
+  //   row.addText(hrName);
+  //   table.addRow(row);
+  //   fillData(table, resHealthRegion.data[resHealthRegion.data.length - 1]);
+  // }
+  //
+  // // Province
+  // row = new UITableRow();
+  // row.isHeader = true;
+  // row.addText(provinces[province]);
+  // table.addRow(row);
+  // fillData(table, resProvince.data[resProvince.data.length - 1]);
+  //
+  // // Country-wide
+  // row = new UITableRow();
+  // row.isHeader = true;
+  // row.addText("Country-wide");
+  // table.addRow(row);
+  // fillData(table, resCountry.data[resCountry.data.length - 1]);
+  //
+  // // Last updated
+  // row = new UITableRow();
+  // row.addText(""); // Empty row
+  // table.addRow(row);
+  // table.addRow(createRow("Last Updated", resCountry.last_updated));
+  //
+  // // present table
+  // table.present();
 
 } else if (config.runsWithSiri) { // Siri
   if (hrCode !== undefined) {
-    Speech.speak(`There are ${resHealthRegion.data[6].change_cases} new cases in your health region ${hrName} and ${resProvince.data[6].change_cases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${resHealthRegion.data[resHealthRegion.data.length - 1].change_cases} new cases in your health region ${hrName} and ${resProvince.data[resProvince.data.length - 1].change_cases} new cases in ${provinces[province]} today.`);
   } else {
-    Speech.speak(`There are ${resProvince.data[6].change_cases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${resProvince.data[resProvince.data.length - 1].change_cases} new cases in ${provinces[province]} today.`);
   }
+}
+
+function createWidget() {
+  let widget = new ListWidget();
+  widget.spacing = defaultSpace;
+  widget.backgroundColor = bgColour;
+
+  // Health region stack
+  let topStack = createBigStack(widget, hrName, resHealthRegion.data[6]);
+  // topStack.setPadding(defaultSpace, defaultSpace, 0, defaultSpace);
+
+  // widget.addSpacer(defaultSpace);
+
+  // Bottom stack with province and country data
+  let bottomStack = widget.addStack();
+  // bottomStack.spacing = defaultSpace;
+  // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
+
+  let provStack = createSmallStack(bottomStack, province, resProvince.data[6]);
+  bottomStack.addSpacer();
+  let countryStack = createSmallStack(bottomStack, "CA", resCountry.data[6]);
+
+  return widget;
+}
+
+function createBigStack(_parent, _title, _data) {
+  let stack = _parent.addStack();
+  stack.layoutVertically();
+  stack.spacing = defaultSpace;
+  stack.backgroundColor = new Color(stackColour);
+  stack.cornerRadius = 5;
+
+  let title = stack.addText(_title);
+  title.textColor = textColour;
+  title.font = Font.systemFont(14);
+  title.centerAlignText();
+
+  let casesStack = stack.addStack();
+  casesStack.addSpacer();
+  let cases = casesStack.addText(formatNumber(_data.change_cases));
+  cases.textColor = textColour;
+  cases.font = Font.systemFont(28);
+  casesStack.addSpacer();
+
+  return stack;
+}
+
+function createSmallStack(_parent, _title, _data) {
+  let stack = _parent.addStack();
+  stack.layoutVertically();
+  stack.spacing = defaultSpace;
+  stack.backgroundColor = new Color(stackColour);
+  stack.size = new Size(60, 0);
+  stack.cornerRadius = 5;
+
+  let titleStack = stack.addStack();
+  // titleStack.layoutHorizontally();
+  titleStack.addSpacer();
+  let title = titleStack.addText(_title);
+  title.textColor = textColour;
+  title.font = Font.systemFont(14);
+
+  let casesStack = stack.addStack();
+  // casesStack.centerAlignContent();
+  casesStack.addSpacer();
+  let cases = casesStack.addText(formatNumber(_data.change_cases));
+  cases.textColor = textColour;
+  cases.font = Font.systemFont(18);
+  casesStack.addSpacer();
+
+  return stack;
 }
 
 function createRow(title, number) {
