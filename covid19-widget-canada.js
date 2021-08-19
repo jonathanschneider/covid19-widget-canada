@@ -34,9 +34,28 @@ const provinces = {
   "YT": "Yukon"
 };
 
+class Cases {
+  constructor(area, dataObj) {
+    this.area = area;
+    this.lastUpdated = dataObj.last_updated;
+    this.newCases = dataObj.data[dataObj.data.length - 1].change_cases;
+    this.totalCases = dataObj.data[dataObj.data.length - 1].total_cases;
+    this.trendIndicator = this.getTrend(dataObj.data);
+    this.timeseries = dataObj.data;
+  }
+  getTrend(timeseries) {
+    let sum = 0, avg = 0;
+    for (let i = 0; i < timeseries.length - 1; i++) {
+      sum += timeseries[i].change_cases;
+    }
+    avg = sum / (timeseries.length - 1);
+    return timeseries[timeseries.length - 1] > avg ? "up" : "down";
+  }
+}
+
 let req = {};
 let hrName;
-let resHealthRegion;
+let res;
 let widget;
 
 // Evaluate widget parameter
@@ -52,9 +71,9 @@ if (args.widgetParameter !== null) { // Widget parameter provided
 // Get health region information
 if (hrCode !== undefined) {
   req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
-  resHealthRegion = await req.loadJSON();
-  hrName = resHealthRegion.data.engname;
-  province = resHealthRegion.data.province;
+  res = await req.loadJSON();
+  hrName = res.data.engname;
+  province = res.data.province;
 }
 
 // Get date 7 days ago
@@ -65,19 +84,22 @@ const lastWeek = d.toISOString().slice(0,10);
 // Get health region stats (if provided)
 if (hrCode !== undefined) {
   req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?stat=cases&fill_dates=true&after=" + lastWeek);
-  resHealthRegion = await req.loadJSON();
-  console.log(resHealthRegion);
+  res = await req.loadJSON();
+  casesHr = new Cases(hrName, res);
+  console.log(casesHr)
 }
 
 // Get province stats
 req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?stat=cases&fill_dates=true&after=" + lastWeek);
-const resProvince = await req.loadJSON();
-console.log(resProvince);
+res = await req.loadJSON();
+casesProvince = new Cases(province, res);
+console.log(casesProvince);
 
 // Get country stats
 req = new Request("https://api.covid19tracker.ca/reports?stat=cases&fill_dates=true&after=" + lastWeek);
-const resCountry = await req.loadJSON();
-console.log(resCountry);
+res = await req.loadJSON();
+casesCountry = new Cases("CA", res);
+console.log(casesCountry);
 
 if (config.runsInWidget) { // Widget
   let widget = createWidget();
@@ -126,9 +148,9 @@ if (config.runsInWidget) { // Widget
 
 } else if (config.runsWithSiri) { // Siri
   if (hrCode !== undefined) {
-    Speech.speak(`There are ${resHealthRegion.data[resHealthRegion.data.length - 1].change_cases} new cases in your health region ${hrName} and ${resProvince.data[resProvince.data.length - 1].change_cases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${casesHr.newCases} new cases in your health region ${hrName} and ${casesProvince.newCases} new cases in ${provinces[province]} today.`);
   } else {
-    Speech.speak(`There are ${resProvince.data[resProvince.data.length - 1].change_cases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${casesProvince.newCases} new cases in ${provinces[province]} today.`);
   }
 }
 
@@ -138,7 +160,7 @@ function createWidget() {
   widget.backgroundColor = bgColour;
 
   // Health region stack
-  let topStack = createBigStack(widget, hrName, resHealthRegion.data[resHealthRegion.data.length - 1]);
+  let topStack = createBigStack(widget, casesHr);
   // topStack.setPadding(defaultSpace, defaultSpace, 0, defaultSpace);
 
   // widget.addSpacer(defaultSpace);
@@ -148,28 +170,28 @@ function createWidget() {
   // bottomStack.spacing = defaultSpace;
   // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
 
-  let provStack = createSmallStack(bottomStack, province, resProvince.data[resProvince.data.length - 1]);
+  let provStack = createSmallStack(bottomStack, casesProvince);
   bottomStack.addSpacer();
-  let countryStack = createSmallStack(bottomStack, "CA", resCountry.data[resCountry.data.length - 1]);
+  let countryStack = createSmallStack(bottomStack, casesCountry);
 
   return widget;
 }
 
-function createBigStack(_parent, _title, _data) {
+function createBigStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
   stack.spacing = defaultSpace;
   stack.backgroundColor = new Color(stackColour);
   stack.cornerRadius = 5;
 
-  let title = stack.addText(_title);
+  let title = stack.addText(_data.area);
   title.textColor = textColour;
   title.font = Font.systemFont(14);
   title.centerAlignText();
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
-  let cases = casesStack.addText(formatNumber(_data.change_cases));
+  let cases = casesStack.addText(formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
   casesStack.addSpacer();
@@ -177,7 +199,7 @@ function createBigStack(_parent, _title, _data) {
   return stack;
 }
 
-function createSmallStack(_parent, _title, _data) {
+function createSmallStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
   stack.spacing = defaultSpace;
@@ -188,14 +210,14 @@ function createSmallStack(_parent, _title, _data) {
   let titleStack = stack.addStack();
   // titleStack.layoutHorizontally();
   titleStack.addSpacer();
-  let title = titleStack.addText(_title);
+  let title = titleStack.addText(_data.area);
   title.textColor = textColour;
   title.font = Font.systemFont(14);
 
   let casesStack = stack.addStack();
   // casesStack.centerAlignContent();
   casesStack.addSpacer();
-  let cases = casesStack.addText(formatNumber(_data.change_cases));
+  let cases = casesStack.addText(formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(18);
   casesStack.addSpacer();
