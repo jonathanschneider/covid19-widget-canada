@@ -49,7 +49,7 @@ class Cases {
       sum += timeseries[i].change_cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1] > avg ? "up" : "down";
+    return timeseries[timeseries.length - 1] > avg ? "↗" : "↘︎";
   }
 }
 
@@ -184,14 +184,14 @@ function createBigStack(_parent, _data) {
   stack.backgroundColor = new Color(stackColour);
   stack.cornerRadius = 5;
 
-  let title = stack.addText(_data.area);
+  let title = stack.addText(_data.area.toUpperCase());
   title.textColor = textColour;
-  title.font = Font.systemFont(14);
+  title.font = Font.systemFont(10);
   title.centerAlignText();
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
-  let cases = casesStack.addText(formatNumber(_data.newCases));
+  let cases = casesStack.addText("+" + formatNumber(_data.newCases) + " " + _data.trendIndicator);
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
   casesStack.addSpacer();
@@ -212,14 +212,14 @@ function createSmallStack(_parent, _data) {
   titleStack.addSpacer();
   let title = titleStack.addText(_data.area);
   title.textColor = textColour;
-  title.font = Font.systemFont(14);
+  title.font = Font.systemFont(10);
 
   let casesStack = stack.addStack();
   // casesStack.centerAlignContent();
   casesStack.addSpacer();
-  let cases = casesStack.addText(formatNumber(_data.newCases));
+  let cases = casesStack.addText("+" + formatNumber(_data.newCases) + " " + _data.trendIndicator);
   cases.textColor = textColour;
-  cases.font = Font.systemFont(18);
+  cases.font = Font.systemFont(14);
   casesStack.addSpacer();
 
   return stack;
