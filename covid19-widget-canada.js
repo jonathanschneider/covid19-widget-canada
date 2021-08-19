@@ -60,7 +60,7 @@ if (hrCode !== undefined) {
 // Get date 7 days ago
 const d = new Date();
 d.setDate(d.getDate() - 6);
-const lastWeek = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+const lastWeek = d.toISOString().slice(0,10);
 
 // Get health region stats (if provided)
 if (hrCode !== undefined) {
