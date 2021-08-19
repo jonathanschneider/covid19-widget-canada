@@ -79,8 +79,8 @@ if (hrCode !== undefined) {
 
 // Get date 7 days ago
 const d = new Date();
-d.setDate(d.getDate() - 6);
-const lastWeek = d.toISOString().slice(0,10);
+d.setDate(d.getDate() - 7);
+const lastWeek = d.toISOString().slice(0, 10);
 
 // Get health region stats (if provided)
 if (hrCode !== undefined) {
@@ -174,6 +174,7 @@ function createWidget() {
   let provStack = createSmallStack(bottomStack, casesProvince);
   bottomStack.addSpacer(defaultSpace);
   let countryStack = createSmallStack(bottomStack, casesCountry);
+  countryStack.size = new Size(80, 0);
 
   return widget;
 }
@@ -181,23 +182,26 @@ function createWidget() {
 function createBigStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
-  // stack.setPadding(0, 0, 0, 0);
+  stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
   // stack.size = new Size(0, 100);
   stack.backgroundColor = new Color(stackColour);
-  stack.cornerRadius = 5;
+  stack.cornerRadius = 10;
 
-  let title = stack.addText(_data.area.toUpperCase());
+  let titleStack = stack.addStack();
+  titleStack.addSpacer();
+  let title = titleStack.addText(_data.area.toUpperCase());
   title.textColor = textColour;
   title.font = Font.systemFont(10);
   title.centerAlignText();
+  titleStack.addSpacer();
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
   let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
-  casesStack.addSpacer(defaultSpace);
+  casesStack.addSpacer(3);
   let trend = casesStack.addText(_data.trendIndicator.symbol);
   trend.textColor = _data.trendIndicator.colour;
   trend.font = Font.systemFont(28);
@@ -209,27 +213,26 @@ function createBigStack(_parent, _data) {
 function createSmallStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
+  stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
   stack.backgroundColor = new Color(stackColour);
   // stack.size = new Size(100, 0);
-  stack.cornerRadius = 5;
+  stack.cornerRadius = 10;
 
   let titleStack = stack.addStack();
-  // titleStack.addSpacer();
   let title = titleStack.addText(_data.area);
   title.textColor = textColour;
   title.font = Font.systemFont(10);
 
   let casesStack = stack.addStack();
-  // casesStack.centerAlignContent();
   casesStack.addSpacer();
   let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
-  cases.font = Font.systemFont(14);
-  casesStack.addSpacer(defaultSpace);
+  cases.font = Font.systemFont(12);
+  casesStack.addSpacer(3);
   let trend = casesStack.addText(_data.trendIndicator.symbol);
   trend.textColor = _data.trendIndicator.colour;
-  trend.font = Font.systemFont(14);
+  trend.font = Font.systemFont(12);
   casesStack.addSpacer();
 
   return stack;
