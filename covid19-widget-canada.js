@@ -66,15 +66,18 @@ const lastWeek = d.toISOString().slice(0,10);
 if (hrCode !== undefined) {
   req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?stat=cases&fill_dates=true&after=" + lastWeek);
   resHealthRegion = await req.loadJSON();
+  console.log(resHealthRegion);
 }
 
 // Get province stats
 req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?stat=cases&fill_dates=true&after=" + lastWeek);
 const resProvince = await req.loadJSON();
+console.log(resProvince);
 
 // Get country stats
 req = new Request("https://api.covid19tracker.ca/reports?stat=cases&fill_dates=true&after=" + lastWeek);
 const resCountry = await req.loadJSON();
+console.log(resCountry);
 
 if (config.runsInWidget) { // Widget
   let widget = createWidget();
@@ -135,7 +138,7 @@ function createWidget() {
   widget.backgroundColor = bgColour;
 
   // Health region stack
-  let topStack = createBigStack(widget, hrName, resHealthRegion.data[6]);
+  let topStack = createBigStack(widget, hrName, resHealthRegion.data[resHealthRegion.data.length - 1]);
   // topStack.setPadding(defaultSpace, defaultSpace, 0, defaultSpace);
 
   // widget.addSpacer(defaultSpace);
@@ -145,9 +148,9 @@ function createWidget() {
   // bottomStack.spacing = defaultSpace;
   // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
 
-  let provStack = createSmallStack(bottomStack, province, resProvince.data[6]);
+  let provStack = createSmallStack(bottomStack, province, resProvince.data[resProvince.data.length - 1]);
   bottomStack.addSpacer();
-  let countryStack = createSmallStack(bottomStack, "CA", resCountry.data[6]);
+  let countryStack = createSmallStack(bottomStack, "CA", resCountry.data[resCountry.data.length - 1]);
 
   return widget;
 }
@@ -216,5 +219,9 @@ function fillData(table, data) {
 }
 
 function formatNumber(num) {
-  return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  if (num === null || isNaN(num)) {
+    return "0";
+  } else {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
 }
