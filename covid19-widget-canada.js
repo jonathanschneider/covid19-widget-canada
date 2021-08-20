@@ -135,7 +135,7 @@ if (config.runsInWidget) { // Widget
     row.isHeader = true;
     row.addText(hrName);
     table.addRow(row);
-    fillData(table, resHealthRegion.data[resHealthRegion.data.length - 1]);
+    fillData(table, casesHr);
   }
 
   // Province
@@ -143,20 +143,20 @@ if (config.runsInWidget) { // Widget
   row.isHeader = true;
   row.addText(provinces[province]);
   table.addRow(row);
-  fillData(table, resProvince.data[resProvince.data.length - 1]);
+  fillData(table, casesProvince);
 
   // Country-wide
   row = new UITableRow();
   row.isHeader = true;
   row.addText("Country-wide");
   table.addRow(row);
-  fillData(table, resCountry.data[resCountry.data.length - 1]);
+  fillData(table, casesCountry);
 
   // Last updated
   row = new UITableRow();
   row.addText(""); // Empty row
   table.addRow(row);
-  table.addRow(createRow("Last Updated", resCountry.last_updated));
+  table.addRow(createRow("Last Updated", casesCountry.lastUpdated));
 
   // present table
   table.present();
@@ -267,11 +267,11 @@ function createRow(title, number) {
 }
 
 function fillData(table, data) {
-  table.addRow(createRow("New cases", formatNumber(data.change_cases)));
-  table.addRow(createRow("Total cases", formatNumber(data.total_cases)));
-  table.addRow(createRow("Deaths", formatNumber(data.total_fatalities)));
-  table.addRow(createRow("Recovered", formatNumber(data.total_recoveries)));
-  table.addRow(createRow("Critical", formatNumber(data.total_criticals)));
+  table.addRow(createRow("New cases", formatNumber(data.newCases)));
+  table.addRow(createRow("Total cases", formatNumber(data.totalCases)));
+  // table.addRow(createRow("Deaths", formatNumber(data.total_fatalities)));
+  // table.addRow(createRow("Recovered", formatNumber(data.total_recoveries)));
+  // table.addRow(createRow("Critical", formatNumber(data.total_criticals)));
 }
 
 function formatNumber(num) {
