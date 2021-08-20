@@ -52,7 +52,7 @@ class Cases {
       sum += timeseries[i].change_cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1] > avg ? {
+    return timeseries[timeseries.length - 1].change_cases > avg ? {
       "symbol": "↗",
       "colour": Color.red()
     } : {
