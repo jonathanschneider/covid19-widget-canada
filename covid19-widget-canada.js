@@ -14,7 +14,7 @@ let hrCode = "4601"; // Winnipeg
 let province = "MB";
 
 const bgColour = Color.white();
-const stackColour = "#E6E6E6";
+const stackColour = new Color("#E6E6E6");
 const textColour = Color.black();
 const defaultSpace = 5;
 const defaultPadding = 5;
@@ -46,12 +46,19 @@ class Cases {
     this.timeseries = dataObj.data;
   }
   getTrend(timeseries) {
-    let sum = 0, avg = 0;
+    let sum = 0,
+      avg = 0;
     for (let i = 0; i < timeseries.length - 1; i++) {
       sum += timeseries[i].change_cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1] > avg ? {"symbol": "↗", "colour": Color.red()} : {"symbol": "↘︎", "colour": Color.green()};
+    return timeseries[timeseries.length - 1] > avg ? {
+      "symbol": "↗",
+      "colour": Color.red()
+    } : {
+      "symbol": "↘︎",
+      "colour": Color.green()
+    };
   }
 }
 
@@ -88,7 +95,7 @@ if (hrCode !== undefined) {
   req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?stat=cases&fill_dates=true&after=" + lastWeek);
   res = await req.loadJSON();
   casesHr = new Cases(hrName, hrName, res);
-  console.log(casesHr)
+  console.log(casesHr);
 }
 
 // Get province stats
@@ -103,55 +110,56 @@ res = await req.loadJSON();
 casesCountry = new Cases("CA", "Canada", res);
 console.log(casesCountry);
 
-if (config.runsInWidget) { // Widget  
+if (config.runsInWidget) { // Widget
   if (hrCode !== undefined) { // Widget with health region, province and country cases
-  widget = createTripleWidget(casesHr, casesProvince, casesCountry);
-} else { // Widget with province and country cases
-  widget = createDoubleWidget(casesProvince, casesCountry);
-}
+    widget = createTripleWidget(casesHr, casesProvince, casesCountry);
+  } else { // Widget with province and country cases
+    widget = createDoubleWidget(casesProvince, casesCountry);
+  }
 
   Script.setWidget(widget);
   Script.complete();
 
-} else if (config.runsInApp ) { // App
-  widget = createTripleWidget(casesHr, casesProvince, casesCountry);
-  widget.presentSmall();
+} else if (config.runsInApp) { // App
+  // Present widget in app for testing
+  // widget = createTripleWidget(casesHr, casesProvince, casesCountry);
+  // widget.presentSmall();
 
-  // // make table
-  // let table = new UITable();
-  // let row = new UITableRow();
-  //
-  // // Health region (if provided)
-  // if (hrCode !== undefined) {
-  //   row = new UITableRow();
-  //   row.isHeader = true;
-  //   row.addText(hrName);
-  //   table.addRow(row);
-  //   fillData(table, resHealthRegion.data[resHealthRegion.data.length - 1]);
-  // }
-  //
-  // // Province
-  // row = new UITableRow();
-  // row.isHeader = true;
-  // row.addText(provinces[province]);
-  // table.addRow(row);
-  // fillData(table, resProvince.data[resProvince.data.length - 1]);
-  //
-  // // Country-wide
-  // row = new UITableRow();
-  // row.isHeader = true;
-  // row.addText("Country-wide");
-  // table.addRow(row);
-  // fillData(table, resCountry.data[resCountry.data.length - 1]);
-  //
-  // // Last updated
-  // row = new UITableRow();
-  // row.addText(""); // Empty row
-  // table.addRow(row);
-  // table.addRow(createRow("Last Updated", resCountry.last_updated));
-  //
-  // // present table
-  // table.present();
+  // make table
+  let table = new UITable();
+  let row = new UITableRow();
+
+  // Health region (if provided)
+  if (hrCode !== undefined) {
+    row = new UITableRow();
+    row.isHeader = true;
+    row.addText(hrName);
+    table.addRow(row);
+    fillData(table, resHealthRegion.data[resHealthRegion.data.length - 1]);
+  }
+
+  // Province
+  row = new UITableRow();
+  row.isHeader = true;
+  row.addText(provinces[province]);
+  table.addRow(row);
+  fillData(table, resProvince.data[resProvince.data.length - 1]);
+
+  // Country-wide
+  row = new UITableRow();
+  row.isHeader = true;
+  row.addText("Country-wide");
+  table.addRow(row);
+  fillData(table, resCountry.data[resCountry.data.length - 1]);
+
+  // Last updated
+  row = new UITableRow();
+  row.addText(""); // Empty row
+  table.addRow(row);
+  table.addRow(createRow("Last Updated", resCountry.last_updated));
+
+  // present table
+  table.present();
 
 } else if (config.runsWithSiri) { // Siri
   if (hrCode !== undefined) {
@@ -161,7 +169,7 @@ if (config.runsInWidget) { // Widget
   }
 }
 
-function createTripleWidget(dataTop, dataBtmLeft, dataBtmRight) {
+function createTripleWidget(dataTop, dataBtmLeft, dataBtmRight) { // Widget with one wide and two small stacks underneath
   let widget = new ListWidget();
   widget.spacing = defaultSpace;
   widget.backgroundColor = bgColour;
@@ -170,31 +178,24 @@ function createTripleWidget(dataTop, dataBtmLeft, dataBtmRight) {
   // Top stack with one wide stack
   let topStack = createWideStack(widget, dataTop);
 
-  // widget.addSpacer(defaultSpace);
-
   // Bottom stack with two small stacks
   let bottomStack = widget.addStack();
-  // bottomStack.spacing = defaultSpace;
-  // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
+  bottomStack.setPadding(0, defaultPadding, 0, defaultPadding);
 
   let provStack = createSmallStack(bottomStack, dataBtmLeft);
   bottomStack.addSpacer(defaultSpace);
   let countryStack = createSmallStack(bottomStack, dataBtmRight);
-  countryStack.size = new Size(80, 0);
-  
+
   return widget;
 }
 
-function createDoubleWidget(dataTop, dataBottom) {
+function createDoubleWidget(dataTop, dataBottom) { // Widget with two wide stacks
   let widget = new ListWidget();
   widget.spacing = defaultSpace;
   widget.backgroundColor = bgColour;
   widget.setPadding(0, 0, 0, 0);
 
-  // Top stack
   let topStack = createWideStack(widget, dataTop);
-
-  // Bottom stack
   let bottomStack = createWideStack(widget, dataBottom);
 
   return widget;
@@ -205,8 +206,6 @@ function createWideStack(_parent, _data) {
   stack.layoutVertically();
   stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
-  // stack.size = new Size(0, 100);
-  stack.backgroundColor = new Color(stackColour);
   stack.cornerRadius = 10;
 
   let titleStack = stack.addStack();
@@ -222,7 +221,7 @@ function createWideStack(_parent, _data) {
   let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
-  casesStack.addSpacer(3);
+  casesStack.addSpacer(defaultSpace);
   let trend = casesStack.addText(_data.trendIndicator.symbol);
   trend.textColor = _data.trendIndicator.colour;
   trend.font = Font.systemFont(28);
@@ -234,26 +233,27 @@ function createWideStack(_parent, _data) {
 function createSmallStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
+  stack.size = new Size(0, 40); // Limit height, so width is adjust to content automatically
   stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
-  stack.backgroundColor = new Color(stackColour);
-  // stack.size = new Size(100, 0);
+  stack.backgroundColor = stackColour;
   stack.cornerRadius = 10;
 
   let titleStack = stack.addStack();
+  titleStack.spacing = defaultSpace;
   let title = titleStack.addText(_data.area);
   title.textColor = textColour;
   title.font = Font.systemFont(10);
+
+  let trend = titleStack.addText(_data.trendIndicator.symbol);
+  trend.textColor = _data.trendIndicator.colour;
+  trend.font = Font.systemFont(10);
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
   let cases = casesStack.addText("+" + formatNumber(_data.newCases));
   cases.textColor = textColour;
-  cases.font = Font.systemFont(12);
-  casesStack.addSpacer(3);
-  let trend = casesStack.addText(_data.trendIndicator.symbol);
-  trend.textColor = _data.trendIndicator.colour;
-  trend.font = Font.systemFont(12);
+  cases.font = Font.systemFont(10);
   casesStack.addSpacer();
 
   return stack;
