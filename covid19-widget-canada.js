@@ -13,9 +13,9 @@
 let hrCode = "4601"; // Winnipeg
 let province = "MB";
 
-const bgColour = Color.white();
-const stackColour = new Color("#E6E6E6");
-const textColour = Color.black();
+const bgColour = Color.dynamic(Color.white(), Color.black());
+const stackColour = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
+const textColour = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
 
