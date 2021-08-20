@@ -36,8 +36,9 @@ const provinces = {
 };
 
 class Cases {
-  constructor(area, dataObj) {
+  constructor(area, areaLong, dataObj) {
     this.area = area;
+    this.areaLong = areaLong;
     this.lastUpdated = dataObj.last_updated;
     this.newCases = dataObj.data[dataObj.data.length - 1].change_cases;
     this.totalCases = dataObj.data[dataObj.data.length - 1].total_cases;
@@ -86,29 +87,34 @@ const lastWeek = d.toISOString().slice(0, 10);
 if (hrCode !== undefined) {
   req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?stat=cases&fill_dates=true&after=" + lastWeek);
   res = await req.loadJSON();
-  casesHr = new Cases(hrName, res);
+  casesHr = new Cases(hrName, hrName, res);
   console.log(casesHr)
 }
 
 // Get province stats
 req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?stat=cases&fill_dates=true&after=" + lastWeek);
 res = await req.loadJSON();
-casesProvince = new Cases(province, res);
+casesProvince = new Cases(province, provinces[province], res);
 console.log(casesProvince);
 
 // Get country stats
 req = new Request("https://api.covid19tracker.ca/reports?stat=cases&fill_dates=true&after=" + lastWeek);
 res = await req.loadJSON();
-casesCountry = new Cases("CA", res);
+casesCountry = new Cases("CA", "Canada", res);
 console.log(casesCountry);
 
-if (config.runsInWidget) { // Widget
-  let widget = createWidget();
+if (config.runsInWidget) { // Widget  
+  if (hrCode !== undefined) { // Widget with health region, province and country cases
+  widget = createTripleWidget(casesHr, casesProvince, casesCountry);
+} else { // Widget with province and country cases
+  widget = createDoubleWidget(casesProvince, casesCountry);
+}
+
   Script.setWidget(widget);
   Script.complete();
 
 } else if (config.runsInApp ) { // App
-  let widget = createWidget();
+  widget = createTripleWidget(casesHr, casesProvince, casesCountry);
   widget.presentSmall();
 
   // // make table
@@ -155,31 +161,46 @@ if (config.runsInWidget) { // Widget
   }
 }
 
-function createWidget() {
+function createTripleWidget(dataTop, dataBtmLeft, dataBtmRight) {
   let widget = new ListWidget();
   widget.spacing = defaultSpace;
   widget.backgroundColor = bgColour;
   widget.setPadding(0, 0, 0, 0);
 
-  // Health region stack
-  let topStack = createBigStack(widget, casesHr);
+  // Top stack with one wide stack
+  let topStack = createWideStack(widget, dataTop);
 
   // widget.addSpacer(defaultSpace);
 
-  // Bottom stack with province and country data
+  // Bottom stack with two small stacks
   let bottomStack = widget.addStack();
   // bottomStack.spacing = defaultSpace;
   // bottomStack.setPadding(0, defaultSpace, defaultSpace, defaultSpace);
 
-  let provStack = createSmallStack(bottomStack, casesProvince);
+  let provStack = createSmallStack(bottomStack, dataBtmLeft);
   bottomStack.addSpacer(defaultSpace);
-  let countryStack = createSmallStack(bottomStack, casesCountry);
+  let countryStack = createSmallStack(bottomStack, dataBtmRight);
   countryStack.size = new Size(80, 0);
+  
+  return widget;
+}
+
+function createDoubleWidget(dataTop, dataBottom) {
+  let widget = new ListWidget();
+  widget.spacing = defaultSpace;
+  widget.backgroundColor = bgColour;
+  widget.setPadding(0, 0, 0, 0);
+
+  // Top stack
+  let topStack = createWideStack(widget, dataTop);
+
+  // Bottom stack
+  let bottomStack = createWideStack(widget, dataBottom);
 
   return widget;
 }
 
-function createBigStack(_parent, _data) {
+function createWideStack(_parent, _data) {
   let stack = _parent.addStack();
   stack.layoutVertically();
   stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
@@ -190,7 +211,7 @@ function createBigStack(_parent, _data) {
 
   let titleStack = stack.addStack();
   titleStack.addSpacer();
-  let title = titleStack.addText(_data.area.toUpperCase());
+  let title = titleStack.addText(_data.areaLong.toUpperCase());
   title.textColor = textColour;
   title.font = Font.systemFont(10);
   title.centerAlignText();
