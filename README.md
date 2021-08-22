@@ -27,6 +27,7 @@ The respective health region code can be found at [https://opencovid.ca/api/#hea
 ## To-Do
 
 - [ ] Detect health region code automatically
+- [ ] Deal with missing reports on weekends
 - [ ] Cache data for when offline
 - [ ] Show test positivity rate
 - [ ] Utilize medium widget
