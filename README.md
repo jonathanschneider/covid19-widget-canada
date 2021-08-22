@@ -1,4 +1,4 @@
-# COVID-19 Widget 🇨🇦
+# COVID-19 Widget Canada 🇨🇦
 
 This script creates a custom iOS widget using [Scriptable](https://scriptable.app) showing daily new cases in health region, province and country.
 
