@@ -19,8 +19,7 @@ The widget also supports dark mode.
 1. Open Scriptable and add a new script.
 1. Edit the name of the script, paste the code and tap 'Done'.
 1. Go to your home screen and add a new Scriptable widget.
-1. Select this script during configuration of this widget.
-1. Enter the health region code (e.g. '4601') or the two-letter province code (e.g. 'MB') in 'Parameter'.
+1. Select this script and enter the health region code (e.g. '4601') or the two-letter province code (e.g. 'MB') in 'Parameter'.
 
 The respective health region code can be found at [https://opencovid.ca/api/#health-region-codes](https://opencovid.ca/api/#health-region-codes).
 
