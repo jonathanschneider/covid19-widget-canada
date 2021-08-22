@@ -2,7 +2,7 @@
 
 This script creates a custom iOS widget using [Scriptable](https://scriptable.app) showing daily new cases in health region, province and country.
 
-![alt text](img/widget.jpg "Widget")
+![alt text](img/widget.png "Widget")
 
 A trend indicator shows today's new cases in comparison to last week's new cases.
 
