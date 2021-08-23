@@ -35,6 +35,12 @@ const provinces = {
   "YT": "Yukon"
 };
 
+let req = {};
+let hrName;
+let res;
+let data = [];
+let widget;
+
 class Cases {
   constructor(area, areaLong, dataObj) {
     this.area = area;
@@ -62,11 +68,6 @@ class Cases {
   }
 }
 
-let req = {};
-let hrName;
-let res;
-let data = [];
-let widget;
 
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
@@ -93,24 +94,26 @@ const lastWeek = d.toISOString().slice(0, 10);
 
 // Get health region stats (if provided)
 if (hrCode !== undefined) {
-  req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?stat=cases&after=" + lastWeek);
+  req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?after=" + lastWeek);
   res = await req.loadJSON();
   data.push(new Cases(hrName, hrName, res));
 }
 
 // Get province stats
-req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?stat=cases&after=" + lastWeek);
+req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?after=" + lastWeek);
 res = await req.loadJSON();
 // casesProvince = new Cases(province, provinces[province], res);
 data.push(new Cases(province, provinces[province], res));
 
 // Get country stats
-req = new Request("https://api.covid19tracker.ca/reports?stat=cases&after=" + lastWeek);
+req = new Request("https://api.covid19tracker.ca/reports?after=" + lastWeek);
 res = await req.loadJSON();
 data.push(new Cases("CA", "Canada", res));
 
-console.log(data);
+console.log(data); // Log data for debugging
 
+
+// Display data
 if (config.runsInWidget) { // Widget
   if (data.length === 3) { // Health region data available
     widget = createTripleWidget(data); // Widget with health region, province and country cases
@@ -156,6 +159,8 @@ if (config.runsInWidget) { // Widget
   }
 }
 
+
+// Functions
 function createTripleWidget(data) { // Widget with one wide and two small stacks underneath
   let widget = new ListWidget();
   widget.spacing = defaultSpace;
@@ -188,7 +193,7 @@ function createDoubleWidget(data) { // Widget with two wide stacks
   return widget;
 }
 
-function createWideStack(parent, data) {
+function createWideStack(parent, region) {
   let stack = parent.addStack();
   stack.layoutVertically();
   stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
@@ -197,7 +202,7 @@ function createWideStack(parent, data) {
 
   let titleStack = stack.addStack();
   titleStack.addSpacer();
-  let title = titleStack.addText(data.areaLong.toUpperCase());
+  let title = titleStack.addText(region.areaLong.toUpperCase());
   title.textColor = textColour;
   title.font = Font.systemFont(10);
   title.centerAlignText();
@@ -205,19 +210,19 @@ function createWideStack(parent, data) {
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(data.newCases));
+  let cases = casesStack.addText("+" + formatNumber(region.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(28);
   casesStack.addSpacer(defaultSpace);
-  let trend = casesStack.addText(data.trendIndicator.symbol);
-  trend.textColor = data.trendIndicator.colour;
+  let trend = casesStack.addText(region.trendIndicator.symbol);
+  trend.textColor = region.trendIndicator.colour;
   trend.font = Font.systemFont(28);
   casesStack.addSpacer();
 
   return stack;
 }
 
-function createSmallStack(parent, data) {
+function createSmallStack(parent, region) {
   let stack = parent.addStack();
   stack.layoutVertically();
   stack.size = new Size(0, 40); // Limit height, so width is adjust to content automatically
@@ -228,17 +233,17 @@ function createSmallStack(parent, data) {
 
   let titleStack = stack.addStack();
   titleStack.spacing = defaultSpace;
-  let title = titleStack.addText(data.area);
+  let title = titleStack.addText(region.area);
   title.textColor = textColour;
   title.font = Font.systemFont(10);
 
-  let trend = titleStack.addText(data.trendIndicator.symbol);
-  trend.textColor = data.trendIndicator.colour;
+  let trend = titleStack.addText(region.trendIndicator.symbol);
+  trend.textColor = region.trendIndicator.colour;
   trend.font = Font.systemFont(10);
 
   let casesStack = stack.addStack();
   casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(data.newCases));
+  let cases = casesStack.addText("+" + formatNumber(region.newCases));
   cases.textColor = textColour;
   cases.font = Font.systemFont(10);
   casesStack.addSpacer();
@@ -253,12 +258,12 @@ function createRow(title, number) {
   return row;
 }
 
-function fillData(table, data) {
-  table.addRow(createRow("New cases", formatNumber(data.newCases)));
-  table.addRow(createRow("Total cases", formatNumber(data.totalCases)));
-  // table.addRow(createRow("Deaths", formatNumber(data.total_fatalities)));
-  // table.addRow(createRow("Recovered", formatNumber(data.total_recoveries)));
-  // table.addRow(createRow("Critical", formatNumber(data.total_criticals)));
+function fillData(table, region) {
+  table.addRow(createRow("New cases", formatNumber(region.newCases)));
+  table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
+  table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].total_fatalities)));
+  table.addRow(createRow("Recovered", formatNumber(region.timeseries[region.timeseries.length - 1].total_recoveries)));
+  table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
 }
 
 function formatNumber(num) {
