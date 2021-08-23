@@ -126,7 +126,8 @@ if (config.runsInWidget) { // Widget
 
 } else if (config.runsInApp) { // App
   // Present widget in app for testing
-  // widget = createTripleWidget(casesHr, casesProvince, casesCountry);
+  // widget = createTripleWidget(data);
+  // widget = createDoubleWidget(data);
   // widget.presentSmall();
 
   // make table
@@ -139,7 +140,13 @@ if (config.runsInWidget) { // Widget
     row.isHeader = true;
     row.addText(region.areaLong);
     table.addRow(row);
-    fillData(table, region);
+    table.addRow(createRow("New cases", formatNumber(region.newCases)));
+    table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
+    table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].change_tests)));
+    table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].total_tests)));
+    table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].total_fatalities)));
+    table.addRow(createRow("Recovered", formatNumber(region.timeseries[region.timeseries.length - 1].total_recoveries)));
+    table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
   });
 
   // Last updated
@@ -256,14 +263,6 @@ function createRow(title, number) {
   row.addText(title);
   row.addText((number || "null").toString()).rightAligned();
   return row;
-}
-
-function fillData(table, region) {
-  table.addRow(createRow("New cases", formatNumber(region.newCases)));
-  table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
-  table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].total_fatalities)));
-  table.addRow(createRow("Recovered", formatNumber(region.timeseries[region.timeseries.length - 1].total_recoveries)));
-  table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
 }
 
 function formatNumber(num) {
