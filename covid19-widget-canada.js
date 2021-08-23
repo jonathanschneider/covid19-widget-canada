@@ -146,7 +146,7 @@ if (config.runsInWidget) { // Widget
     table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].total_tests)));
     table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].total_fatalities)));
     table.addRow(createRow("Recovered", formatNumber(region.timeseries[region.timeseries.length - 1].total_recoveries)));
-    table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
+    // table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
   });
 
   // Last updated
