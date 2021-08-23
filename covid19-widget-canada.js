@@ -75,7 +75,7 @@ if (args.widgetParameter !== null) { // Widget parameter provided
     hrCode = args.widgetParameter;
   } else if (args.widgetParameter.length == 2) { // Province provided
     hrCode = undefined;
-    province = args.widgetParameter;
+    province = args.widgetParameter.toUpperCase();
   }
 }
 
