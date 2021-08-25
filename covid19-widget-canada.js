@@ -13,9 +13,9 @@
 let hrCode = "4601"; // Winnipeg
 let province = "MB";
 
-const bgColour = Color.dynamic(Color.white(), Color.black());
-const stackColour = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
-const textColour = Color.dynamic(Color.black(), Color.white());
+const bgColor = Color.dynamic(Color.white(), Color.black());
+const stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
+const textColor = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
 
@@ -61,14 +61,16 @@ class Cases {
     avg = sum / (timeseries.length - 1);
     return timeseries[timeseries.length - 1].cases > avg ? {
       "symbol": "↗",
-      "colour": Color.red()
+      "color": Color.red()
     } : {
       "symbol": "↘︎",
-      "colour": Color.green()
+      "color": Color.green()
     };
   }
 }
 
+
+// Get data
 
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
@@ -111,27 +113,56 @@ console.log(data); // Log data for debugging
 
 
 // Display data
+
 if (config.runsInWidget) { // Widget
-  if (data.length === 3) { // Health region data available
-    widget = createTripleWidget(data); // Widget with health region, province and country cases
-  } else {
-    widget = createDoubleWidget(data); // Widget with province and country cases
+  if (config.widgetFamily === "small") { // Small widget
+    if (data.length === 3) { // Health region known; create widget with health region, province and country cases
+      widget = new ListWidget();
+      widget.spacing = defaultSpace;
+      widget.backgroundColor = bgColor;
+      widget.setPadding(0, 0, 0, 0);
+
+      // Top stack with one wide stack
+      addWideStack(widget, data[0]);
+
+      // Bottom stack with two small stacks
+      let bottomStack = widget.addStack();
+      bottomStack.setPadding(0, defaultPadding, 0, defaultPadding);
+      addSmallStack(bottomStack, data[1]); // Bottom left
+      bottomStack.addSpacer(defaultSpace);
+      addSmallStack(bottomStack, data[2]); // Bottom right
+
+    } else { // Health region unknown; create widget with province and country cases
+      widget = new ListWidget();
+      widget.spacing = defaultSpace;
+      widget.backgroundColor = bgColor;
+      widget.setPadding(0, 0, 0, 0);
+
+      addWideStack(widget, data[0]); // Top
+      addWideStack(widget, data[1]); // Bottom
+    }
+
+  } else { // Medium or large widget
+    widget = new ListWidget();
+    widget.spacing = defaultSpace;
+    widget.backgroundColor = bgColor;
+    widget.setPadding(0, 0, 0, 0);
+
+    let stack = widget.addStack();
+
+    data.forEach(region => {
+      addThreeRowStack(stack, region);
+    });
   }
 
   Script.setWidget(widget);
   Script.complete();
 
 } else if (config.runsInApp) { // App
-  // Present widget in app for testing
-  // widget = createTripleWidget(data);
-  // widget = createDoubleWidget(data);
-  // widget.presentSmall();
-
-  // make table
   let table = new UITable();
   let row = new UITableRow();
 
-  // Display data per region
+  // Fill data per region
   data.forEach(region => {
     row = new UITableRow();
     row.isHeader = true;
@@ -145,13 +176,12 @@ if (config.runsInWidget) { // Widget
     table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].cumulative_deaths)));
   });
 
-  // Last updated
+  // Add last updated
   row = new UITableRow();
   row.addText(""); // Empty row
   table.addRow(row);
   table.addRow(createRow("Last Updated", data[0].lastUpdated));
 
-  // present table
   table.present();
 
 } else if (config.runsWithSiri) { // Siri
@@ -164,94 +194,107 @@ if (config.runsInWidget) { // Widget
 
 
 // Functions
-function createTripleWidget(data) { // Widget with one wide and two small stacks underneath
-  let widget = new ListWidget();
-  widget.spacing = defaultSpace;
-  widget.backgroundColor = bgColour;
-  widget.setPadding(0, 0, 0, 0);
 
-  // Top stack with one wide stack
-  let topStack = createWideStack(widget, data[0]);
+function addWideStack(parent, region) {
+  let stack = parent.addStack();
+  stack.layoutVertically();
+  stack.setPadding(defaultPadding, 0, defaultPadding, 0);
+  stack.spacing = defaultSpace;
+  stack.cornerRadius = 10;
 
-  // Bottom stack with two small stacks
-  let bottomStack = widget.addStack();
-  bottomStack.setPadding(0, defaultPadding, 0, defaultPadding);
+  addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
+  addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, 28);
 
-  let provStack = createSmallStack(bottomStack, data[1]);
-  bottomStack.addSpacer(defaultSpace);
-  let countryStack = createSmallStack(bottomStack, data[2]);
-
-  return widget;
+  return stack;
 }
 
-function createDoubleWidget(data) { // Widget with two wide stacks
-  let widget = new ListWidget();
-  widget.spacing = defaultSpace;
-  widget.backgroundColor = bgColour;
-  widget.setPadding(0, 0, 0, 0);
+function addSmallStack(parent, region) {
+  let stack = parent.addStack();
+  stack.layoutVertically();
+  stack.size = new Size(0, 40); // Limit height so stack may only grow horizontally
+  stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
+  stack.spacing = defaultSpace;
+  stack.backgroundColor = stackColor;
+  stack.cornerRadius = 10;
 
-  let topStack = createWideStack(widget, data[0]);
-  let bottomStack = createWideStack(widget, data[1]);
+  addTextWithTrendStack(stack, region.area, region.trendIndicator, 10, 'left');
+  addCenteredTextStack(stack, "+" + formatNumber(region.newCases), 10);
 
-  return widget;
+  return stack;
 }
 
-function createWideStack(parent, region) {
+function addThreeRowStack(parent, region) {
   let stack = parent.addStack();
   stack.layoutVertically();
   stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
-  stack.cornerRadius = 10;
 
-  let titleStack = stack.addStack();
-  titleStack.addSpacer();
-  let title = titleStack.addText(region.areaLong.toUpperCase());
-  title.textColor = textColour;
-  title.font = Font.systemFont(10);
+  addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
+  stack.addSpacer(defaultSpace);
+  addTextWithTrendStack(stack, formatNumber(region.newCases), region.trendIndicator);
+  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) : '--');
+  addCenteredTextStack(stack, (region.area.length == 2) ?  formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--');
+
+  return stack;
+}
+
+function addCenteredTextStack(parent, text, size) {
+  let stack = parent.addStack();
+
+  stack.addSpacer();
+  let title = stack.addText(text);
   title.centerAlignText();
-  titleStack.addSpacer();
-
-  let casesStack = stack.addStack();
-  casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(region.newCases));
-  cases.textColor = textColour;
-  cases.font = Font.systemFont(28);
-  casesStack.addSpacer(defaultSpace);
-  let trend = casesStack.addText(region.trendIndicator.symbol);
-  trend.textColor = region.trendIndicator.colour;
-  trend.font = Font.systemFont(28);
-  casesStack.addSpacer();
+  if (size !== undefined) title.font = Font.systemFont(size);
+  stack.addSpacer();
 
   return stack;
 }
 
-function createSmallStack(parent, region) {
+function addTextWithTrendStack(parent, text, trend, size, alignment) {
   let stack = parent.addStack();
-  stack.layoutVertically();
-  stack.size = new Size(0, 40); // Limit height, so width is adjust to content automatically
-  stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
   stack.spacing = defaultSpace;
-  stack.backgroundColor = stackColour;
-  stack.cornerRadius = 10;
 
-  let titleStack = stack.addStack();
-  titleStack.spacing = defaultSpace;
-  let title = titleStack.addText(region.area);
-  title.textColor = textColour;
-  title.font = Font.systemFont(10);
+  if (alignment !== 'left') stack.addSpacer(); // Add spacer if not left-aligned
+  let title = stack.addText(text);
+  title.textColor = textColor;
+  if (size !== undefined) title.font = Font.systemFont(size);
 
-  let trend = titleStack.addText(region.trendIndicator.symbol);
-  trend.textColor = region.trendIndicator.colour;
-  trend.font = Font.systemFont(10);
-
-  let casesStack = stack.addStack();
-  casesStack.addSpacer();
-  let cases = casesStack.addText("+" + formatNumber(region.newCases));
-  cases.textColor = textColour;
-  cases.font = Font.systemFont(10);
-  casesStack.addSpacer();
+  let indicator = stack.addText(trend.symbol);
+  indicator.textColor = trend.color;
+  if (size !== undefined) indicator.font = Font.systemFont(size);
+  if (alignment !== 'right') stack.addSpacer(); // Add spacer if not right-aligned
 
   return stack;
+}
+
+function addSymbolTextTrendStack(parent, symbol, text, trend, size, alignment) {
+  let stack = parent.addStack();
+  stack.spacing = defaultSpace;
+
+  if (alignment !== 'left') stack.addSpacer(); // Add spacer if not left-aligned
+
+  if (symbol !== undefined) addSFSymbolStack(stack, symbol, 10, textColor);
+
+  let title = stack.addText(text);
+  title.textColor = textColor;
+  if (size !== undefined) title.font = Font.systemFont(size);
+
+  if (trend !== undefined) {
+    let indicator = stack.addText(trend.symbol);
+    indicator.textColor = trend.color;
+    if (size !== undefined) indicator.font = Font.systemFont(size);
+  }
+
+  if (alignment !== 'right') stack.addSpacer(); // Add spacer if not right-aligned
+
+  return stack;
+}
+
+function addSFSymbolStack(parent, name, size, color) {
+  let symbol = SFSymbol.named(name);
+  symbol.applyFont(Font.systemFont(size));
+  let image = parent.addImage(symbol.image);
+  image.tintColor = color;
 }
 
 function createRow(title, number) {
