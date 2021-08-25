@@ -29,7 +29,7 @@ The respective health region code can be found at [https://opencovid.ca/api/#hea
 - [ ] Deal with missing reports on weekends
 - [ ] Cache data for when offline
 - [ ] Show test positivity rate
-- [ ] Utilize medium widget
+- [x] Utilize medium widget
 - [ ] Utilize large widget
 
 ## Credits

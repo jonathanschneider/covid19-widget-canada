@@ -19,24 +19,7 @@ const textColor = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
 
-// const provinces = {
-//   "AB": "Alberta",
-//   "BC": "BC",
-//   "MB": "Manitoba",
-//   "NB": "New Brunswick",
-//   "NL": "NL",
-//   "NT": "NWT",
-//   "NS": "Nova Scotia",
-//   "NU": "Nunavut",
-//   "ON": "Ontario",
-//   "PE": "PEI",
-//   "QC": "Quebec",
-//   "SK": "Saskatchewan",
-//   "YT": "Yukon"
-// };
-
 let req = {};
-// let hrName;
 let res;
 let data = [];
 let widget;
@@ -224,16 +207,19 @@ function addSmallStack(parent, region) {
 }
 
 function addThreeRowStack(parent, region) {
+  let textSize = 14;
   let stack = parent.addStack();
   stack.layoutVertically();
-  stack.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
+  // stack.setPadding(0, 0, 0, 0);
   stack.spacing = defaultSpace;
 
   addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
   stack.addSpacer(defaultSpace);
-  addTextWithTrendStack(stack, formatNumber(region.newCases), region.trendIndicator);
-  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) : '--');
-  addCenteredTextStack(stack, (region.area.length == 2) ?  formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--');
+  addTextWithTrendStack(stack, "➕ " + formatNumber(region.newCases), region.trendIndicator, textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? "🤒 " + formatNumber(region.activeCases) : '--', textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? "🧪 " + formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--', textSize);
+  // stack.addText((region.area.length == 2) ? "🤒 " + formatNumber(region.activeCases) : '--', textSize);
+  // stack.addText((region.area.length == 2) ? "🧪 " + formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--', textSize);
 
   return stack;
 }
