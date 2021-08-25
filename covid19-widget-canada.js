@@ -72,21 +72,13 @@ class Cases {
 
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
-  if (!isNaN(args.widgetParameter) && args.widgetParameter.length == 4) { // Health region provided
+  if (!isNaN(args.widgetParameter) && args.widgetParameter.length >= 3) { // Health region provided
     hrCode = args.widgetParameter;
   } else if (args.widgetParameter.length == 2) { // Province provided
     hrCode = undefined;
     province = args.widgetParameter.toUpperCase();
   }
 }
-
-// // Get health region information
-// if (hrCode !== undefined) {
-//   req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
-//   res = await req.loadJSON();
-//   hrName = res.data.engname;
-//   province = res.data.province;
-// }
 
 // Get date 7 days ago
 const d = new Date();
@@ -98,6 +90,11 @@ if (hrCode !== undefined) {
   req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
   res = await req.loadJSON();
   data.push(new Cases(res.summary[0].health_region, res));
+
+  // Get province
+  req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
+    res = await req.loadJSON();
+    province = res.data.province;
 }
 
 // Get province stats
