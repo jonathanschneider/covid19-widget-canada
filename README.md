@@ -8,7 +8,7 @@ A trend indicator shows today's new cases in comparison to last week's new cases
 
 The region can be set through widget parameter or through constants in the code by either providing a health region code or a the two-letter province code.
 
-The data comes from [COVID-19 Tracker Canada](https://covid19tracker.ca).
+The data is taken from the [COVID-19 Canada Open Data Working Group](https://opencovid.ca).
 
 The widget also supports dark mode.
 
@@ -34,6 +34,6 @@ The respective health region code can be found at [https://opencovid.ca/api/#hea
 
 ## Credits
 
-* @andrewthong for the data and the [API](https://github.com/andrewthong/covid19tracker-api)
+* [CCODWG](https://opencovid.ca) for the data and the API
 * @rphl for the inspiration with [corona-widget](https://github.com/rphl/corona-widget)
 * @kevinjalbert for the ground-breaking work on his [script](https://gist.github.com/kevinjalbert/275590b53f8d6b06c5703fad549099f9)

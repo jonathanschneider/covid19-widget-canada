@@ -19,46 +19,47 @@ const textColour = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
 
-const provinces = {
-  "AB": "Alberta",
-  "BC": "BC",
-  "MB": "Manitoba",
-  "NB": "New Brunswick",
-  "NL": "NL",
-  "NT": "NWT",
-  "NS": "Nova Scotia",
-  "NU": "Nunavut",
-  "ON": "Ontario",
-  "PE": "PEI",
-  "QC": "Quebec",
-  "SK": "Saskatchewan",
-  "YT": "Yukon"
-};
+// const provinces = {
+//   "AB": "Alberta",
+//   "BC": "BC",
+//   "MB": "Manitoba",
+//   "NB": "New Brunswick",
+//   "NL": "NL",
+//   "NT": "NWT",
+//   "NS": "Nova Scotia",
+//   "NU": "Nunavut",
+//   "ON": "Ontario",
+//   "PE": "PEI",
+//   "QC": "Quebec",
+//   "SK": "Saskatchewan",
+//   "YT": "Yukon"
+// };
 
 let req = {};
-let hrName;
+// let hrName;
 let res;
 let data = [];
 let widget;
 
 class Cases {
-  constructor(area, areaLong, dataObj) {
+  constructor(area, dataObj) {
     this.area = area;
-    this.areaLong = areaLong;
-    this.lastUpdated = dataObj.last_updated;
-    this.newCases = dataObj.data[dataObj.data.length - 1].change_cases;
-    this.totalCases = dataObj.data[dataObj.data.length - 1].total_cases;
-    this.trendIndicator = this.getTrend(dataObj.data);
-    this.timeseries = dataObj.data;
+    this.areaLong = (dataObj.summary[0].health_region !== undefined) ? dataObj.summary[0].health_region : dataObj.summary[0].province;
+    this.lastUpdated = dataObj.version;
+    this.newCases = dataObj.summary[dataObj.summary.length - 1].cases;
+    this.activeCases = dataObj.summary[dataObj.summary.length - 1].active_cases;
+    this.totalCases = dataObj.summary[dataObj.summary.length - 1].cumulative_cases;
+    this.trendIndicator = this.getTrend(dataObj.summary);
+    this.timeseries = dataObj.summary;
   }
   getTrend(timeseries) {
     let sum = 0,
       avg = 0;
     for (let i = 0; i < timeseries.length - 1; i++) {
-      sum += timeseries[i].change_cases;
+      sum += timeseries[i].cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1].change_cases > avg ? {
+    return timeseries[timeseries.length - 1].cases > avg ? {
       "symbol": "↗",
       "colour": Color.red()
     } : {
@@ -79,13 +80,13 @@ if (args.widgetParameter !== null) { // Widget parameter provided
   }
 }
 
-// Get health region information
-if (hrCode !== undefined) {
-  req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
-  res = await req.loadJSON();
-  hrName = res.data.engname;
-  province = res.data.province;
-}
+// // Get health region information
+// if (hrCode !== undefined) {
+//   req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
+//   res = await req.loadJSON();
+//   hrName = res.data.engname;
+//   province = res.data.province;
+// }
 
 // Get date 7 days ago
 const d = new Date();
@@ -94,21 +95,20 @@ const lastWeek = d.toISOString().slice(0, 10);
 
 // Get health region stats (if provided)
 if (hrCode !== undefined) {
-  req = new Request("https://api.covid19tracker.ca/reports/regions/" + hrCode + "?after=" + lastWeek);
+  req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
   res = await req.loadJSON();
-  data.push(new Cases(hrName, hrName, res));
+  data.push(new Cases(res.summary[0].health_region, res));
 }
 
 // Get province stats
-req = new Request("https://api.covid19tracker.ca/reports/province/" + province + "?after=" + lastWeek);
+req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + province + "&after=" + lastWeek);
 res = await req.loadJSON();
-// casesProvince = new Cases(province, provinces[province], res);
-data.push(new Cases(province, provinces[province], res));
+data.push(new Cases(province, res));
 
 // Get country stats
-req = new Request("https://api.covid19tracker.ca/reports?after=" + lastWeek);
+req = new Request("https://api.opencovid.ca/summary?version=true&loc=canada&after=" + lastWeek);
 res = await req.loadJSON();
-data.push(new Cases("CA", "Canada", res));
+data.push(new Cases("CA", res));
 
 console.log(data); // Log data for debugging
 
@@ -141,12 +141,11 @@ if (config.runsInWidget) { // Widget
     row.addText(region.areaLong);
     table.addRow(row);
     table.addRow(createRow("New cases", formatNumber(region.newCases)));
+    if (region.area.length == 2) table.addRow(createRow("Active cases", formatNumber(region.activeCases)));
     table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
-    table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].change_tests)));
-    table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].total_tests)));
-    table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].total_fatalities)));
-    table.addRow(createRow("Recovered", formatNumber(region.timeseries[region.timeseries.length - 1].total_recoveries)));
-    // table.addRow(createRow("Critical", formatNumber(region.timeseries[region.timeseries.length - 1].total_criticals)));
+    if (region.area.length == 2) table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].testing)));
+    if (region.area.length == 2) table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].cumulative_testing)));
+    table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].cumulative_deaths)));
   });
 
   // Last updated
@@ -160,9 +159,9 @@ if (config.runsInWidget) { // Widget
 
 } else if (config.runsWithSiri) { // Siri
   if (data.length === 3) {
-    Speech.speak(`There are ${data[0].newCases} new cases in your health region ${hrName} and ${data[1].newCases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${data[0].newCases} new cases in your health region ${data[0].area} and ${data[1].newCases} new cases in ${data[1].areaLong} today.`);
   } else {
-    Speech.speak(`There are ${data[0].newCases} new cases in ${provinces[province]} today.`);
+    Speech.speak(`There are ${data[0].newCases} new cases in ${data[0].areaLong} today.`);
   }
 }
 
