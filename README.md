@@ -8,7 +8,7 @@ A trend indicator shows today's new cases in comparison to last week's new cases
 
 The region can be set through widget parameter or through constants in the code by either providing a health region code or a the two-letter province code.
 
-The data is taken from the [COVID-19 Canada Open Data Working Group](https://opencovid.ca).
+The data is taken from the [COVID-19 Canada Open Data Working Group](https://opencovid.ca). Data is cached for when device is offline.
 
 The widget also supports dark mode.
 
@@ -27,7 +27,7 @@ The respective health region code can be found at [https://opencovid.ca/api/#hea
 
 - [ ] Detect health region code automatically
 - [ ] Deal with missing reports on weekends
-- [ ] Cache data for when offline
+- [x] Cache data for when offline
 - [ ] Show test positivity rate
 - [x] Utilize medium widget
 - [ ] Utilize large widget
