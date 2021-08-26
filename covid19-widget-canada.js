@@ -18,6 +18,8 @@ const stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
 const textColor = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
+const trendUp = "↗";
+const trendDown = "↘︎";
 const fileManager = FileManager.local();
 const pathCached = fileManager.joinPath(fileManager.cacheDirectory(), "covid19-widget-canada-cache.json");
 
@@ -44,13 +46,7 @@ class Cases {
       sum += timeseries[i].cases;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1].cases > avg ? {
-      "symbol": "↗",
-      "color": Color.red()
-    } : {
-      "symbol": "↘︎",
-      "color": Color.green()
-    };
+    return timeseries[timeseries.length - 1].cases > avg ? trendUp : trendDown;
   }
 }
 
@@ -231,8 +227,6 @@ function addThreeRowStack(parent, region) {
   addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, textSize);
   addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) + " 🤒" : '--', textSize);
   addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].testing) + " 🧪" : '--', textSize);
-  // stack.addText((region.area.length == 2) ? "🤒 " + formatNumber(region.activeCases) : '--', textSize);
-  // stack.addText((region.area.length == 2) ? "🧪 " + formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--', textSize);
 
   return stack;
 }
@@ -258,8 +252,8 @@ function addTextWithTrendStack(parent, text, trend, size, alignment) {
   title.textColor = textColor;
   if (size !== undefined) title.font = Font.systemFont(size);
 
-  let indicator = stack.addText(trend.symbol);
-  indicator.textColor = trend.color;
+  let indicator = stack.addText(trend);
+  indicator.textColor = (trend === trendUp) ? Color.red() : Color.green();
   if (size !== undefined) indicator.font = Font.systemFont(size);
   if (alignment !== 'right') stack.addSpacer(); // Add spacer if not right-aligned
 
