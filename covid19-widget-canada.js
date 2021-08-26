@@ -18,6 +18,8 @@ const stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
 const textColor = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
+const fileManager = FileManager.local();
+const pathCached = fileManager.joinPath(fileManager.cacheDirectory(), "covid19-widget-canada-cache.json");
 
 let req = {};
 let res;
@@ -53,8 +55,6 @@ class Cases {
 }
 
 
-// Get data
-
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
   if (!isNaN(args.widgetParameter) && args.widgetParameter.length >= 3) { // Health region provided
@@ -70,27 +70,40 @@ const d = new Date();
 d.setDate(d.getDate() - 7);
 const lastWeek = d.toISOString().slice(0, 10);
 
+// Get data
+
+try {
 // Get health region stats (if provided)
-if (hrCode !== undefined) {
-  req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
-  res = await req.loadJSON();
-  data.push(new Cases(res.summary[0].health_region, res));
-
-  // Get province
-  req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
+  if (hrCode !== undefined) {
+    req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
     res = await req.loadJSON();
-    province = res.data.province;
+    data.push(new Cases(res.summary[0].health_region, res));
+
+    // Get province
+    req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
+      res = await req.loadJSON();
+      province = res.data.province;
+  }
+
+  // Get province stats
+  req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + province + "&after=" + lastWeek);
+  res = await req.loadJSON();
+  data.push(new Cases(province, res));
+
+  // Get country stats
+  req = new Request("https://api.opencovid.ca/summary?version=true&loc=canada&after=" + lastWeek);
+  res = await req.loadJSON();
+  data.push(new Cases("CA", res));
+
+  // Cache data
+  fileManager.writeString(pathCached, JSON.stringify(data));
+  console.log("Caching data");
+
+} catch(error) { // Could not load data
+  data = JSON.parse(fileManager.readString(pathCached));
+  console.log(error);
+  console.log("Reading data from cache");
 }
-
-// Get province stats
-req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + province + "&after=" + lastWeek);
-res = await req.loadJSON();
-data.push(new Cases(province, res));
-
-// Get country stats
-req = new Request("https://api.opencovid.ca/summary?version=true&loc=canada&after=" + lastWeek);
-res = await req.loadJSON();
-data.push(new Cases("CA", res));
 
 console.log(data); // Log data for debugging
 
