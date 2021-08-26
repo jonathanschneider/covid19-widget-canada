@@ -12,10 +12,8 @@
 // Default values if widget parameter isn't used; change here if required
 let hrCode = "4601"; // Winnipeg
 let province = "MB";
+const appearance = 0; // 0: automatic, 1: light, 2: dark
 
-const bgColor = Color.dynamic(Color.white(), Color.black());
-const stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
-const textColor = Color.dynamic(Color.black(), Color.white());
 const defaultSpace = 5;
 const defaultPadding = 5;
 const trendUp = "↗";
@@ -27,6 +25,22 @@ let req = {};
 let res;
 let data = [];
 let widget;
+let bgColor, textColor, stackColor;
+
+// Apply appearance
+if (appearance === 1) {
+  bgColor = Color.white();
+  textColor = Color.black();
+  stackColor = new Color("#E6E6E6");
+} else if (appearance === 2) {
+  bgColor = Color.black();
+  textColor = Color.white();
+  stackColor = Color.darkGray();
+} else {
+  bgColor = Color.dynamic(Color.white(), Color.black());
+  textColor = Color.dynamic(Color.black(), Color.white());
+  stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
+}
 
 class Cases {
   constructor(area, dataObj) {
@@ -49,7 +63,6 @@ class Cases {
     return timeseries[timeseries.length - 1].cases > avg ? trendUp : trendDown;
   }
 }
-
 
 // Evaluate widget parameter
 if (args.widgetParameter !== null) { // Widget parameter provided
@@ -236,6 +249,7 @@ function addCenteredTextStack(parent, text, size) {
 
   stack.addSpacer();
   let title = stack.addText(text);
+  title.textColor = textColor;
   title.centerAlignText();
   if (size !== undefined) title.font = Font.systemFont(size);
   stack.addSpacer();
