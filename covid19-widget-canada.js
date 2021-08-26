@@ -228,9 +228,9 @@ function addThreeRowStack(parent, region) {
 
   addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
   stack.addSpacer(defaultSpace);
-  addTextWithTrendStack(stack, "➕ " + formatNumber(region.newCases), region.trendIndicator, textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? "🤒 " + formatNumber(region.activeCases) : '--', textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? "🧪 " + formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--', textSize);
+  addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) + " 🤒" : '--', textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].testing) + " 🧪" : '--', textSize);
   // stack.addText((region.area.length == 2) ? "🤒 " + formatNumber(region.activeCases) : '--', textSize);
   // stack.addText((region.area.length == 2) ? "🧪 " + formatNumber(region.timeseries[region.timeseries.length - 1].testing) : '--', textSize);
 
