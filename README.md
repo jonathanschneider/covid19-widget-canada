@@ -1,16 +1,19 @@
 # COVID-19 Widget Canada 🇨🇦
 
-This script creates a custom iOS widget using [Scriptable](https://scriptable.app) showing daily new cases in health region, province and country.
+This script creates a custom iOS widget using [Scriptable](https://scriptable.app) showing COVID-19 stats for a specific health region, province and all of Canada.
 
-![alt text](img/widget.png "Widget")
+![alt text](img/widgetsLight.png "Widgets light")![alt text](img/widgetsDark.png "Widgets dark")
+
+The small widget shows new cases for a specific health region, province and all of Canada.
+The medium widget shows new cases, active cases and tests taken that day for a specific health region, province and all of Canada.
 
 A trend indicator shows today's new cases in comparison to last week's new cases.
 
-The region can be set through widget parameter or through constants in the code by either providing a health region code or a the two-letter province code.
+The region can be set through the widget parameter or through constants in the code by either providing a health region code or a the two-letter province code.
 
-The data is taken from the [COVID-19 Canada Open Data Working Group](https://opencovid.ca). Data is cached for when device is offline.
+The data is taken unaltered from the [COVID-19 Canada Open Data Working Group](https://opencovid.ca) – only the trend indicator is added. The data is cached for when device is offline.
 
-The widget also supports dark mode.
+The widgets support dark mode and the appearance can be configured in the code. By default the appearance of the widgets change with the appearance of the device.
 
 ## Installation
 
