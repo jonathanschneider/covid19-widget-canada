@@ -20,6 +20,12 @@ const trendUp = "↗";
 const trendDown = "↘︎";
 const fileManager = FileManager.local();
 const pathCached = fileManager.joinPath(fileManager.cacheDirectory(), "covid19-widget-canada-cache.json");
+const timezones = {
+  "EST": "-05:00",
+  "EDT": "-04:00"
+};
+const locale = "en-CA";
+const dateOptions = {"dateStyle": "short", "timeStyle": "short", "hour12": false};
 
 let req = {};
 let res;
@@ -46,7 +52,7 @@ class Cases {
   constructor(area, dataObj) {
     this.area = area;
     this.areaLong = (dataObj.summary[0].health_region !== undefined) ? dataObj.summary[0].health_region : dataObj.summary[0].province;
-    this.lastUpdated = dataObj.version;
+    this.lastUpdated = new Date(dataObj.version.replace(" ", "T").replace(dataObj.version.slice(-4), ":00.000" + timezones[dataObj.version.slice(-3)]));
     this.newCases = dataObj.summary[dataObj.summary.length - 1].cases;
     this.activeCases = dataObj.summary[dataObj.summary.length - 1].active_cases;
     this.totalCases = dataObj.summary[dataObj.summary.length - 1].cumulative_cases;
@@ -153,7 +159,7 @@ if (config.runsInWidget) { // Widget
 
   // Last updated
   widget.addSpacer();
-  addCenteredTextStack(widget, data[0].lastUpdated, 7);
+  addCenteredTextStack(widget, data[0].lastUpdated.toLocaleString(locale, dateOptions).replace(",", ""), 7);
 
   Script.setWidget(widget);
   Script.complete();
@@ -180,7 +186,7 @@ if (config.runsInWidget) { // Widget
   row = new UITableRow();
   row.addText(""); // Empty row
   table.addRow(row);
-  table.addRow(createRow("Last Updated", data[0].lastUpdated));
+  table.addRow(createRow("Last Updated", data[0].lastUpdated.toLocaleString(locale, dateOptions).replace(",", "")));
 
   table.present();
 
@@ -215,7 +221,7 @@ function addSmallStack(parent, region) {
   stack.backgroundColor = stackColor;
   stack.cornerRadius = 10;
 
-  addTextWithTrendStack(stack, region.area, region.trendIndicator, 10, 'left');
+  addTextWithTrendStack(stack, region.area, region.trendIndicator, 10, "left");
   addCenteredTextStack(stack, "+" + formatNumber(region.newCases), 10);
 
   return stack;
@@ -230,8 +236,8 @@ function addThreeRowStack(parent, region) {
   addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
   stack.addSpacer(defaultSpace);
   addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) + " 🤒" : '--', textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].testing) + " 🧪" : '--', textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) + " 🤒" : "--", textSize);
+  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].testing) + " 🧪" : "--", textSize);
 
   return stack;
 }
@@ -253,7 +259,7 @@ function addTextWithTrendStack(parent, text, trend, size, alignment) {
   let stack = parent.addStack();
   stack.spacing = defaultSpace;
 
-  if (alignment !== 'left') stack.addSpacer(); // Add spacer if not left-aligned
+  if (alignment !== "left") stack.addSpacer(); // Add spacer if not left-aligned
   let title = stack.addText(text);
   title.textColor = textColor;
   if (size !== undefined) title.font = Font.systemFont(size);
@@ -261,7 +267,7 @@ function addTextWithTrendStack(parent, text, trend, size, alignment) {
   let indicator = stack.addText(trend);
   indicator.textColor = (trend === trendUp) ? Color.red() : Color.green();
   if (size !== undefined) indicator.font = Font.systemFont(size);
-  if (alignment !== 'right') stack.addSpacer(); // Add spacer if not right-aligned
+  if (alignment !== "right") stack.addSpacer(); // Add spacer if not right-aligned
 
   return stack;
 }
@@ -270,7 +276,7 @@ function addSymbolTextTrendStack(parent, symbol, text, trend, size, alignment) {
   let stack = parent.addStack();
   stack.spacing = defaultSpace;
 
-  if (alignment !== 'left') stack.addSpacer(); // Add spacer if not left-aligned
+  if (alignment !== "left") stack.addSpacer(); // Add spacer if not left-aligned
 
   if (symbol !== undefined) addSFSymbolStack(stack, symbol, 10, textColor);
 
@@ -284,7 +290,7 @@ function addSymbolTextTrendStack(parent, symbol, text, trend, size, alignment) {
     if (size !== undefined) indicator.font = Font.systemFont(size);
   }
 
-  if (alignment !== 'right') stack.addSpacer(); // Add spacer if not right-aligned
+  if (alignment !== "right") stack.addSpacer(); // Add spacer if not right-aligned
 
   return stack;
 }
