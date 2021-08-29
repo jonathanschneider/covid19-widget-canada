@@ -36,7 +36,7 @@ if (appearance === 1) {
   bgColor = Color.black();
   textColor = Color.white();
   stackColor = Color.darkGray();
-} else {
+} else {
   bgColor = Color.dynamic(Color.white(), Color.black());
   textColor = Color.dynamic(Color.black(), Color.white());
   stackColor = Color.dynamic(new Color("#E6E6E6"), Color.darkGray());
@@ -82,7 +82,7 @@ const lastWeek = d.toISOString().slice(0, 10);
 // Get data
 
 try {
-// Get health region stats (if provided)
+  // Get health region stats (if provided)
   if (hrCode !== undefined) {
     req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
     res = await req.loadJSON();
@@ -90,8 +90,8 @@ try {
 
     // Get province
     req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
-      res = await req.loadJSON();
-      province = res.data.province;
+    res = await req.loadJSON();
+    province = res.data.province;
   }
 
   // Get province stats
@@ -108,7 +108,7 @@ try {
   fileManager.writeString(pathCached, JSON.stringify(data));
   console.log("Caching data");
 
-} catch(error) { // Could not load data
+} catch (error) { // Could not load data
   data = JSON.parse(fileManager.readString(pathCached));
   console.log(error);
   console.log("Reading data from cache");
@@ -120,45 +120,40 @@ console.log(data); // Log data for debugging
 // Display data
 
 if (config.runsInWidget) { // Widget
+  let widget = new ListWidget();
+  widget.backgroundColor = bgColor;
+  widget.setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding);
+  widget.addSpacer();
+
   if (config.widgetFamily === "small") { // Small widget
     if (data.length === 3) { // Health region known; create widget with health region, province and country cases
-      widget = new ListWidget();
-      widget.spacing = defaultSpace;
-      widget.backgroundColor = bgColor;
-      widget.setPadding(0, 0, 0, 0);
-
       // Top stack with one wide stack
       addWideStack(widget, data[0]);
+      widget.addSpacer();
 
       // Bottom stack with two small stacks
       let bottomStack = widget.addStack();
-      bottomStack.setPadding(0, defaultPadding, 0, defaultPadding);
+      bottomStack.spacing = defaultSpace;
       addSmallStack(bottomStack, data[1]); // Bottom left
-      bottomStack.addSpacer(defaultSpace);
       addSmallStack(bottomStack, data[2]); // Bottom right
 
     } else { // Health region unknown; create widget with province and country cases
-      widget = new ListWidget();
-      widget.spacing = defaultSpace;
-      widget.backgroundColor = bgColor;
-      widget.setPadding(0, 0, 0, 0);
-
       addWideStack(widget, data[0]); // Top
+      widget.addSpacer();
       addWideStack(widget, data[1]); // Bottom
     }
 
   } else { // Medium or large widget
-    widget = new ListWidget();
-    widget.spacing = defaultSpace;
-    widget.backgroundColor = bgColor;
-    widget.setPadding(0, 0, 0, 0);
-
     let stack = widget.addStack();
 
     data.forEach(region => {
       addThreeRowStack(stack, region);
     });
   }
+
+  // Last updated
+  widget.addSpacer();
+  addCenteredTextStack(widget, data[0].lastUpdated, 7);
 
   Script.setWidget(widget);
   Script.complete();
@@ -203,12 +198,10 @@ if (config.runsInWidget) { // Widget
 function addWideStack(parent, region) {
   let stack = parent.addStack();
   stack.layoutVertically();
-  stack.setPadding(defaultPadding, 0, defaultPadding, 0);
   stack.spacing = defaultSpace;
-  stack.cornerRadius = 10;
 
   addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
-  addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, 28);
+  addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, 26);
 
   return stack;
 }
@@ -232,7 +225,6 @@ function addThreeRowStack(parent, region) {
   let textSize = 14;
   let stack = parent.addStack();
   stack.layoutVertically();
-  // stack.setPadding(0, 0, 0, 0);
   stack.spacing = defaultSpace;
 
   addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
