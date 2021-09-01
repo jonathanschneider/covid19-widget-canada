@@ -116,6 +116,10 @@ try {
 
 } catch (error) { // Could not load data
   data = JSON.parse(fileManager.readString(pathCached));
+  // Convert lastUpdated string to Date object
+  data.forEach(region => {
+    region.lastUpdated = new Date(region.lastUpdated);
+  });
   console.log(error);
   console.log("Reading data from cache");
 }
