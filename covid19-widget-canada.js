@@ -28,6 +28,7 @@ const locale = "en-CA";
 const dateOptions = {"dateStyle": "short", "timeStyle": "short", "hour12": false};
 
 let req = {};
+let url;
 let res;
 let data = [];
 let widget;
@@ -49,24 +50,33 @@ if (appearance === 1) {
 }
 
 class Cases {
-  constructor(area, dataObj) {
-    this.area = area;
-    this.areaLong = (dataObj.summary[0].health_region !== undefined) ? dataObj.summary[0].health_region : dataObj.summary[0].province;
+  constructor(regionShort, regionLong, dataObj) {
+    this.regionShort = regionShort;
+    this.regionLong = regionLong;
     this.lastUpdated = new Date(dataObj.version.replace(" ", "T").replace(dataObj.version.slice(-4), ":00.000" + timezones[dataObj.version.slice(-3)]));
-    this.newCases = dataObj.summary[dataObj.summary.length - 1].cases;
-    this.activeCases = dataObj.summary[dataObj.summary.length - 1].active_cases;
-    this.totalCases = dataObj.summary[dataObj.summary.length - 1].cumulative_cases;
-    this.trendIndicator = this.getTrend(dataObj.summary);
-    this.timeseries = dataObj.summary;
+    this.newCases = this.getNewCases(dataObj.data[dataObj.data.length - 1].cases_daily, dataObj.data[dataObj.data.length - 2].cases_daily);
+    this.activeCases = dataObj.data[dataObj.data.length - 1].cases_daily;
+    this.totalCases = dataObj.data[dataObj.data.length - 1].cases;
+    this.trendIndicator = this.getTrend(dataObj.data);
+    this.timeseries = dataObj.data;
   }
+
   getTrend(timeseries) {
     let sum = 0,
       avg = 0;
     for (let i = 0; i < timeseries.length - 1; i++) {
-      sum += timeseries[i].cases;
+      sum += timeseries[i].cases_daily;
     }
     avg = sum / (timeseries.length - 1);
-    return timeseries[timeseries.length - 1].cases > avg ? trendUp : trendDown;
+    return timeseries[timeseries.length - 1].cases_daily > avg ? trendUp : trendDown;
+  }
+
+  getNewCases(casesToday, casesYesterday) {
+    if (casesToday > casesYesterday) {
+      return casesToday - casesYesterday;
+    } else {
+      return 0;
+    }
   }
 }
 
@@ -85,46 +95,58 @@ const d = new Date();
 d.setDate(d.getDate() - 7);
 const lastWeek = d.toISOString().slice(0, 10);
 
+
 // Get data
 
 try {
   // Get health region stats (if provided)
   if (hrCode !== undefined) {
-    req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + hrCode + "&after=" + lastWeek);
+    console.log("Getting data for health region");
+    url = "https://api.opencovid.ca/summary?version=true&geo=hr&loc=" + hrCode + "&hr_names=short&pt_names=short&after=" + lastWeek;
+    console.log("Requesting " + url);
+    req = new Request(url);
     res = await req.loadJSON();
-    data.push(new Cases(res.summary[0].health_region, res));
+    data.push(new Cases(res.data[0].sub_region_1, res.data[0].sub_region_1, res));
+    province = res.data[0].region;
 
-    // Get province
-    req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
-    res = await req.loadJSON();
-    province = res.data.province;
+    // // Get province
+    // req = new Request("https://api.covid19tracker.ca/regions/" + hrCode);
+    // res = await req.loadJSON();
+    // province = res.data.province;
   }
 
   // Get province stats
-  req = new Request("https://api.opencovid.ca/summary?version=true&loc=" + province + "&after=" + lastWeek);
+  console.log("Getting data for province/territory");
+  url = "https://api.opencovid.ca/summary?version=true&geo=pt&loc=" + province + "&pt_names=canonical&after=" + lastWeek;
+  console.log("Requesting " + url);
+  req = new Request(url);
   res = await req.loadJSON();
-  data.push(new Cases(province, res));
+  data.push(new Cases(province, res.data[0].region, res));
 
   // Get country stats
-  req = new Request("https://api.opencovid.ca/summary?version=true&loc=canada&after=" + lastWeek);
+  console.log("Getting data for Canada");
+  url = "https://api.opencovid.ca/summary?version=true&geo=can&after=" + lastWeek;
+  console.log("Requesting " + url);
+  req = new Request(url);
   res = await req.loadJSON();
-  data.push(new Cases("CA", res));
+  data.push(new Cases("CA", "Canada", res));
 
   // Cache data
-  fileManager.writeString(pathCached, JSON.stringify(data));
   console.log("Caching data");
+  fileManager.writeString(pathCached, JSON.stringify(data));
 
 } catch (error) { // Could not load data
+  console.log(error);
+  console.log("Reading data from cache");
+
   data = JSON.parse(fileManager.readString(pathCached));
   // Convert lastUpdated string to Date object
   data.forEach(region => {
     region.lastUpdated = new Date(region.lastUpdated);
   });
-  console.log(error);
-  console.log("Reading data from cache");
 }
 
-console.log(data); // Log data for debugging
+// console.log(data); // Log data for debugging
 
 
 // Display data
@@ -176,14 +198,14 @@ if (config.runsInWidget) { // Widget
   data.forEach(region => {
     row = new UITableRow();
     row.isHeader = true;
-    row.addText(region.areaLong);
+    row.addText(region.regionLong);
     table.addRow(row);
     table.addRow(createRow("New cases", formatNumber(region.newCases)));
-    if (region.area.length == 2) table.addRow(createRow("Active cases", formatNumber(region.activeCases)));
+    if (region.regionShort.length == 2) table.addRow(createRow("Active cases", formatNumber(region.activeCases)));
     table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
-    if (region.area.length == 2) table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].testing)));
-    if (region.area.length == 2) table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].cumulative_testing)));
-    table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].cumulative_deaths)));
+    if (region.regionShort.length == 2) table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].test_completed_daily)));
+    if (region.regionShort.length == 2) table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].test_completed)));
+    table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].deaths)));
   });
 
   // Add last updated
@@ -196,9 +218,9 @@ if (config.runsInWidget) { // Widget
 
 } else if (config.runsWithSiri) { // Siri
   if (data.length === 3) {
-    Speech.speak(`There are ${data[0].newCases} new cases in your health region ${data[0].area} and ${data[1].newCases} new cases in ${data[1].areaLong} today.`);
+    Speech.speak(`There are ${data[0].newCases} new cases in ${data[0].regionLong} and ${data[1].newCases} new cases in ${data[1].regionLong} today.`);
   } else {
-    Speech.speak(`There are ${data[0].newCases} new cases in ${data[0].areaLong} today.`);
+    Speech.speak(`There are ${data[0].newCases} new cases in ${data[0].regionLong} today.`);
   }
 }
 
@@ -210,7 +232,7 @@ function addWideStack(parent, region) {
   stack.layoutVertically();
   stack.spacing = defaultSpace;
 
-  addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
+  addCenteredTextStack(stack, region.regionLong.toUpperCase(), 10);
   addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, 26);
 
   return stack;
@@ -225,7 +247,7 @@ function addSmallStack(parent, region) {
   stack.backgroundColor = stackColor;
   stack.cornerRadius = 10;
 
-  addTextWithTrendStack(stack, region.area, region.trendIndicator, 10, "left");
+  addTextWithTrendStack(stack, region.regionShort, region.trendIndicator, 10, "left");
   addCenteredTextStack(stack, "+" + formatNumber(region.newCases), 10);
 
   return stack;
@@ -237,11 +259,11 @@ function addThreeRowStack(parent, region) {
   stack.layoutVertically();
   stack.spacing = defaultSpace;
 
-  addCenteredTextStack(stack, region.areaLong.toUpperCase(), 10);
+  addCenteredTextStack(stack, region.regionLong.toUpperCase(), 10);
   stack.addSpacer(defaultSpace);
   addTextWithTrendStack(stack, "+" + formatNumber(region.newCases), region.trendIndicator, textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.activeCases) + " 🤒" : "--", textSize);
-  addCenteredTextStack(stack, (region.area.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].testing) + " 🧪" : "--", textSize);
+  addCenteredTextStack(stack, (region.regionShort.length == 2) ? formatNumber(region.activeCases) + " 🤒" : "--", textSize);
+  addCenteredTextStack(stack, (region.regionShort.length == 2) ? formatNumber(region.timeseries[region.timeseries.length - 1].tests_completed_daily) + " 🧪" : "--", textSize);
 
   return stack;
 }
