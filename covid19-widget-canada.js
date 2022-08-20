@@ -201,10 +201,10 @@ if (config.runsInWidget) { // Widget
     row.addText(region.regionLong);
     table.addRow(row);
     table.addRow(createRow("New cases", formatNumber(region.newCases)));
-    if (region.regionShort.length == 2) table.addRow(createRow("Active cases", formatNumber(region.activeCases)));
+    table.addRow(createRow("Active cases", formatNumber(region.activeCases)));
     table.addRow(createRow("Total cases", formatNumber(region.totalCases)));
-    if (region.regionShort.length == 2) table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].test_completed_daily)));
-    if (region.regionShort.length == 2) table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].test_completed)));
+    if (region.regionShort.length == 2) table.addRow(createRow("New tests", formatNumber(region.timeseries[region.timeseries.length - 1].tests_completed_daily)));
+    if (region.regionShort.length == 2) table.addRow(createRow("Total tests", formatNumber(region.timeseries[region.timeseries.length - 1].tests_completed)));
     table.addRow(createRow("Deaths", formatNumber(region.timeseries[region.timeseries.length - 1].deaths)));
   });
 
